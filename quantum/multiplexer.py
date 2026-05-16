@@ -53,8 +53,9 @@ def build_circuit(select: list[int], data: list[int]) -> QuantumCircuit:
 
 
 def run(select: list[int], data: list[int], shots: int = 1024) -> dict:
-    qc      = build_circuit(select, data)
-    metrics = get_metrics(qc)
+    qc         = build_circuit(select, data)
+    init_gates = sum(select) + sum(data)
+    metrics    = get_metrics(qc, init_gate_count=init_gates)
 
     sim    = AerSimulator()
     result = sim.run(qc, shots=shots).result()

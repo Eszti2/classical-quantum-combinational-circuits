@@ -39,7 +39,6 @@ def build_circuit(inputs: list[int]) -> QuantumCircuit:
     qc.ccx(qr[0], qr[1], qr[2])
 
     # Sum = A XOR B → CNOT
-    # FONTOS: CCX előtt kell futnia, mert a CNOT felülírja q1 értékét
     qc.cx(qr[0], qr[1])
 
     qc.barrier()
@@ -67,8 +66,9 @@ def run(inputs: list[int], shots: int = 1024) -> dict:
           "ancilla":    int,
         }
     """
-    qc      = build_circuit(inputs)
-    metrics = get_metrics(qc)
+    qc         = build_circuit(inputs)
+    init_gates = sum(inputs)
+    metrics    = get_metrics(qc, init_gate_count=init_gates)
 
     # Szimuláció
     sim    = AerSimulator()

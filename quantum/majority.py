@@ -39,8 +39,9 @@ def build_circuit(inputs: list[int]) -> QuantumCircuit:
 
 
 def run(inputs: list[int], shots: int = 1024) -> dict:
-    qc      = build_circuit(inputs)
-    metrics = get_metrics(qc)
+    qc         = build_circuit(inputs)
+    init_gates = sum(inputs)
+    metrics    = get_metrics(qc, init_gate_count=init_gates)
 
     sim    = AerSimulator()
     result = sim.run(qc, shots=shots).result()
