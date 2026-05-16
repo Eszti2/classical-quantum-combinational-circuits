@@ -93,13 +93,14 @@ def generate_plots(shots: int = 1024):
     # hogy az összehasonlítás fair legyen mindkét oldalon
 
     metrics = {
-        "Féladder":         {"gate_count": 2,  "q_gate_count": 2,  "depth": 1, "q_depth": 2,  "ancilla": 1},
-        "Teljes összeadó":  {"gate_count": 5,  "q_gate_count": 5,  "depth": 3, "q_depth": 5,  "ancilla": 1},
-        "Paritásgenerátor": {"gate_count": 3,  "q_gate_count": 3,  "depth": 3, "q_depth": 3,  "ancilla": 1},
-        "Majority gate":    {"gate_count": 5,  "q_gate_count": 3,  "depth": 3, "q_depth": 3,  "ancilla": 1},
-        "Multiplexer":      {"gate_count": 9,  "q_gate_count": 12, "depth": 3, "q_depth": 10, "ancilla": 1},
-        "Komparátor":       {"gate_count": 17, "q_gate_count": 52, "depth": 6, "q_depth": 29, "ancilla": 4},
-    }
+    "Féladder":         {"gate_count": 2,  "q_gate_count": 2,  "depth": 1, "q_depth": 2,  "ancilla": 1},
+    "Teljes összeadó":  {"gate_count": 5,  "q_gate_count": 5,  "depth": 3, "q_depth": 5,  "ancilla": 1},
+    "Paritásgenerátor": {"gate_count": 3,  "q_gate_count": 3,  "depth": 3, "q_depth": 4,  "ancilla": 1},
+    "Majority gate":    {"gate_count": 5,  "q_gate_count": 3,  "depth": 3, "q_depth": 3,  "ancilla": 1},
+    "Multiplexer":      {"gate_count": 9,  "q_gate_count": 12, "depth": 3, "q_depth": 10, "ancilla": 1},
+    "Komparátor":       {"gate_count": 17, "q_gate_count": 52, "depth": 6, "q_depth": 29, "ancilla": 4},
+}
+
 
     labels   = list(metrics.keys())
     cl_gates = [metrics[n]["gate_count"]   for n in labels]
