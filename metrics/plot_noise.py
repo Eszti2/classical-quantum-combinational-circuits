@@ -14,6 +14,19 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from metrics.noise_analysis import run_all
+from quantum.half_adder  import build_circuit as ha_build
+from quantum.full_adder  import build_circuit as fa_build
+from quantum.parity      import build_circuit as par_build
+from quantum.majority    import build_circuit as maj_build
+from quantum.multiplexer import build_circuit as mux_build
+from quantum.comparator  import build_circuit as cmp_build
+from quantum.utils import get_metrics
+
+
+def _qm(qc):
+    """Kvantum metrikák mérése: gate_count és depth inicializálás nélkül."""
+    m = get_metrics(qc, init_gate_count=0)
+    return m["gate_count"], m["depth"]
 
 
 def generate_plots(shots: int = 1024):
@@ -88,19 +101,23 @@ def generate_plots(shots: int = 1024):
     print("Mentve: tests/noise_bar_5pct.png")
     plt.close()
 
-    # ── 3. Összehasonlító metrikák oszlopdiagram ──────────────────────────────
-    # Logikai kapuszámok (inicializáló X kapuk nélkül) — tudatos döntés,
-    # hogy az összehasonlítás fair legyen mindkét oldalon
+    # ── 3. Összehasonlító metrikák — kvantum automatikusan mérve ─────────────
+
+    ha_qgc,  ha_qd  = _qm(ha_build([0, 0]))
+    fa_qgc,  fa_qd  = _qm(fa_build([0, 0, 0]))
+    par_qgc, par_qd = _qm(par_build([0, 0, 0, 0], mode='even'))
+    maj_qgc, maj_qd = _qm(maj_build([0, 0, 0]))
+    mux_qgc, mux_qd = _qm(mux_build([0, 0], [0, 0, 0, 0]))
+    cmp_qgc, cmp_qd = _qm(cmp_build([0, 0], [0, 0]))
 
     metrics = {
-    "Féladder":         {"gate_count": 2,  "q_gate_count": 2,  "depth": 1, "q_depth": 2,  "ancilla": 1},
-    "Teljes összeadó":  {"gate_count": 5,  "q_gate_count": 5,  "depth": 3, "q_depth": 5,  "ancilla": 1},
-    "Paritásgenerátor": {"gate_count": 3,  "q_gate_count": 3,  "depth": 3, "q_depth": 4,  "ancilla": 1},
-    "Majority gate":    {"gate_count": 5,  "q_gate_count": 3,  "depth": 3, "q_depth": 3,  "ancilla": 1},
-    "Multiplexer":      {"gate_count": 9,  "q_gate_count": 12, "depth": 3, "q_depth": 10, "ancilla": 1},
-    "Komparátor":       {"gate_count": 17, "q_gate_count": 52, "depth": 6, "q_depth": 29, "ancilla": 4},
-}
-
+        "Félösszeadó":      {"gate_count": 2,  "q_gate_count": ha_qgc,  "depth": 1, "q_depth": ha_qd},
+        "Teljes összeadó":  {"gate_count": 5,  "q_gate_count": fa_qgc,  "depth": 3, "q_depth": fa_qd},
+        "Paritásgenerátor": {"gate_count": 3,  "q_gate_count": par_qgc, "depth": 3, "q_depth": par_qd},
+        "Többségi kapu":    {"gate_count": 5,  "q_gate_count": maj_qgc, "depth": 3, "q_depth": maj_qd},
+        "Multiplexer":      {"gate_count": 9,  "q_gate_count": mux_qgc, "depth": 3, "q_depth": mux_qd},
+        "Komparátor":       {"gate_count": 17, "q_gate_count": cmp_qgc, "depth": 6, "q_depth": cmp_qd},
+    }
 
     labels   = list(metrics.keys())
     cl_gates = [metrics[n]["gate_count"]   for n in labels]

@@ -6,7 +6,7 @@ Minden hálózatra megméri a pontosságot különböző hibaarányok mellett.
 
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 import sys
 import os
 
@@ -25,15 +25,14 @@ from quantum.comparator  import build_circuit as cmp_circuit
 def build_noise_model(error_rate: float) -> NoiseModel:
     """
     Depolarizációs zajmodellt épít a megadott hibaaránnyal.
+    Csak elemi kapukra alkalmaz hibát (cx, rz, sx, x, id).
     """
     noise_model = NoiseModel()
     error_1q = depolarizing_error(error_rate, 1)
     error_2q = depolarizing_error(error_rate, 2)
-    error_3q = depolarizing_error(error_rate, 3)
 
-    noise_model.add_all_qubit_quantum_error(error_1q, ['x', 'h', 't', 's', 'id'])
+    noise_model.add_all_qubit_quantum_error(error_1q, ['x', 'rz', 'sx', 'id'])
     noise_model.add_all_qubit_quantum_error(error_2q, ['cx'])
-    noise_model.add_all_qubit_quantum_error(error_3q, ['ccx'])
 
     return noise_model
 
@@ -46,10 +45,12 @@ def measure_accuracy(qc: QuantumCircuit,
                      shots: int = 1024) -> float:
     """
     Megméri hogy az áramkör helyes eredményt ad-e zajos szimulátorban.
+    Az áramkört transzpilálja elemi kapukra futtatás előtt.
     """
     noise_model = build_noise_model(error_rate)
-    sim = AerSimulator(noise_model=noise_model)
-    result = sim.run(qc, shots=shots).result()
+    backend = AerSimulator(noise_model=noise_model)
+    tqc = transpile(qc, backend=backend)
+    result = backend.run(tqc, shots=shots).result()
     counts = result.get_counts()
     correct = counts.get(expected, 0)
     return correct / shots
@@ -58,13 +59,13 @@ def measure_accuracy(qc: QuantumCircuit,
 # ── Hálózatonkénti tesztek ───────────────────────────────────────────────────
 
 def test_half_adder(error_rates: list[float], shots: int = 1024) -> dict:
-    """Féladder zajérzékenység: A=1, B=1 → Sum=0, Carry=1 → '10'"""
+    """Félösszeadó zajérzékenység: A=1, B=1 → Sum=0, Carry=1 → '10'"""
     results = []
     qc = ha_circuit([1, 1])
     for rate in error_rates:
         acc = measure_accuracy(qc, "10", rate, shots)
         results.append(acc)
-    return {"name": "Féladder", "accuracies": results}
+    return {"name": "Félösszeadó", "accuracies": results}
 
 
 def test_full_adder(error_rates: list[float], shots: int = 1024) -> dict:
@@ -88,13 +89,13 @@ def test_parity(error_rates: list[float], shots: int = 1024) -> dict:
 
 
 def test_majority(error_rates: list[float], shots: int = 1024) -> dict:
-    """Majority gate zajérzékenység: A=1, B=1, C=0 → M=1 → '1'"""
+    """Többségi kapu zajérzékenység: A=1, B=1, C=0 → M=1 → '1'"""
     results = []
     qc = maj_circuit([1, 1, 0])
     for rate in error_rates:
         acc = measure_accuracy(qc, "1", rate, shots)
         results.append(acc)
-    return {"name": "Majority gate", "accuracies": results}
+    return {"name": "Többségi kapu", "accuracies": results}
 
 
 def test_multiplexer(error_rates: list[float], shots: int = 1024) -> dict:
